@@ -1,0 +1,59 @@
+# Core dependencies
+# PyTorch with CUDA 12.1 support
+# Installation handled by deploy.sh using pip
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch>=2.1.0
+torchvision>=0.16.0
+numpy==1.24.4
+scipy==1.11.4
+
+# Web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+python-multipart==0.0.6
+
+# Image processing
+Pillow==10.1.0
+opencv-python==4.8.1.78
+
+# Depth estimation and advanced image processing
+timm>=0.9.0  # MiDaS backbone models
+einops>=0.7.0  # Tensor operations for MiDaS
+scikit-image>=0.22.0  # Medial axis, morphology operations
+
+# 3D Gaussian Splatting (GPU-accelerated, optional)
+#
+# gsplat: Modern CUDA-accelerated Gaussian splatting library
+#   - Native orthographic projection support (ideal for 2D rendering)
+#   - 4x less GPU memory than original diff-gaussian-rasterization
+#   - 15% faster rendering
+#   - Active development (2025 updates)
+#
+# Installation handled automatically by deploy.sh
+# Manual installation:
+#   pip install gsplat
+#
+# Verification:
+#   python -c "import gsplat; print('gsplat installed successfully')"
+#
+# Prerequisites:
+#   - PyTorch with CUDA support (installed via pip)
+#   - NVIDIA GPU with CUDA 11.8+ (CUDA 12.x supported)
+#
+# Note: Application works in CPU-only mode without this package (reduced performance)
+gsplat
+
+# Optional: Diffusion inpainting (Phase 2)
+# diffusers==0.25.0
+# transformers==4.36.2
+# accelerate==0.25.0
+
+# Utilities
+plyfile==1.0.3
+tqdm==4.66.1
+packaging>=21.0  # Required by gsplat
+
+# Configuration and visualization
+omegaconf>=2.3.0  # For Hydra-style configuration
+matplotlib>=3.7.0  # For debug visualization

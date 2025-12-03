@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DGS 2D Painting</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Header -->
+        <header>
+            <h1>🎨 3D Gaussian Splat Brush Painting</h1>
+            <div id="connection-status" class="status-disconnected">Disconnected</div>
+        </header>
+
+        <!-- Main Content -->
+        <div id="main-content">
+            <!-- Canvas Area -->
+            <div id="canvas-container">
+                <canvas id="paintCanvas" width="1024" height="768"></canvas>
+                <div id="canvas-overlay">
+                    <div id="loading-indicator" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Rendering...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <aside id="control-panel">
+                <h2>Controls</h2>
+
+                <!-- Brush Library -->
+                <section class="control-section">
+                    <h3>Brush Library</h3>
+
+                    <div id="brushLibraryContainer">
+                        <div id="brushLibraryList" class="brush-library-list">
+                            <!-- Brushes will be populated here -->
+                        </div>
+                        <div class="brush-library-controls">
+                            <button id="refreshBrushesBtn" class="btn btn-small">Refresh</button>
+                            <button id="deleteBrushBtn" class="btn btn-small btn-danger" disabled>Delete</button>
+                        </div>
+                        <div id="selectedBrushInfo" class="selected-brush-info">
+                            <p>No brush selected</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Brush Settings -->
+                <section class="control-section">
+                    <h3>Brush Settings</h3>
+
+                    <div class="control-group">
+                        <label for="brushPattern">Pattern:</label>
+                        <select id="brushPattern">
+                            <option value="circular" selected>Circular</option>
+                            <option value="line">Line</option>
+                            <option value="grid">Grid</option>
+                        </select>
+                        <button id="createBrushBtn" class="btn-small">Create</button>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="brushSize">Size: <span id="brushSizeValue">1.0</span></label>
+                        <input type="range" id="brushSize" min="0.5" max="3.0" step="0.1" value="1.0">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="brushSpacing">Spacing: <span id="brushSpacingValue">0.3</span></label>
+                        <input type="range" id="brushSpacing" min="0.1" max="0.5" step="0.05" value="0.3">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="brushOpacity">Opacity: <span id="brushOpacityValue">0.8</span></label>
+                        <input type="range" id="brushOpacity" min="0.1" max="1.0" step="0.1" value="0.8">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="brushColor">Color:</label>
+                        <input type="color" id="brushColor" value="#4d4d4d">
+                    </div>
+
+                    <button id="applyBrushBtn" class="btn">Apply Settings</button>
+                </section>
+
+                <!-- Brush Upload -->
+                <section class="control-section">
+                    <h3>Upload Brush Image</h3>
+
+                    <div class="control-group">
+                        <label for="brushImageUpload" class="file-input-label">
+                            Choose Image File
+                            <input type="file" id="brushImageUpload" accept="image/*" style="display: none;">
+                        </label>
+                        <p class="help-text">PNG, JPG, or BMP (max 2048x2048)</p>
+                    </div>
+
+                    <div id="uploadPreview" class="upload-preview hidden">
+                        <img id="previewImage" alt="Brush preview">
+                        <div class="preview-info">
+                            <span id="previewFilename"></span>
+                            <span id="previewDimensions"></span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="depthProfile">Depth Profile:</label>
+                        <select id="depthProfile">
+                            <option value="convex" selected>Convex (bulge out)</option>
+                            <option value="concave">Concave (indent in)</option>
+                            <option value="flat">Flat (minimal depth)</option>
+                            <option value="wavy">Wavy (sinusoidal)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="depthScale">Depth Scale: <span id="depthScaleValue">0.2</span></label>
+                        <input type="range" id="depthScale" min="0.1" max="1.0" step="0.1" value="0.2">
+                    </div>
+
+                    <button id="convertBrushBtn" class="btn btn-primary" disabled>Convert to 3DGS Brush</button>
+                    <div id="conversionProgress" class="progress hidden">
+                        <div class="progress-bar"></div>
+                        <span class="progress-text">Converting...</span>
+                    </div>
+                </section>
+
+                <!-- Phase 3 Features -->
+                <section class="control-section">
+                    <h3>Advanced Features</h3>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="enableDeformation" checked>
+                            Enable Deformation
+                        </label>
+                        <p class="help-text">Non-rigid brush deformation along spline curvature</p>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="enableInpainting">
+                            Enable Inpainting
+                        </label>
+                        <p class="help-text">Blend overlapping stamp regions (experimental)</p>
+                    </div>
+
+                    <button id="applyFeaturesBtn" class="btn">Apply Features</button>
+                </section>
+
+                <!-- Debug Visualization -->
+                <section class="control-section">
+                    <h3>Debug Visualization</h3>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="enableDebugMode">
+                            Enable Debug Mode
+                        </label>
+                        <p class="help-text">Show Gaussian frames and basis vectors</p>
+                    </div>
+
+                    <div id="debugOptions" class="debug-options hidden">
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="showGaussianOrigins" checked>
+                                Show Gaussian Origins
+                            </label>
+                        </div>
+
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="showBasisVectors" checked>
+                                Show Basis Vectors (X,Y,Z)
+                            </label>
+                        </div>
+
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="showSplineFrames">
+                                Show Spline Frames
+                            </label>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="debugOpacity">Debug Overlay Opacity: <span id="debugOpacityValue">0.8</span></label>
+                            <input type="range" id="debugOpacity" min="0.1" max="1.0" step="0.1" value="0.8">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="basisVectorLength">Basis Vector Length: <span id="basisVectorLengthValue">50</span>px</label>
+                            <input type="range" id="basisVectorLength" min="10" max="100" step="5" value="50">
+                        </div>
+
+                        <button id="applyDebugBtn" class="btn">Apply Debug Settings</button>
+                    </div>
+                </section>
+
+                <!-- Actions -->
+                <section class="control-section">
+                    <h3>Actions</h3>
+
+                    <button id="clearSceneBtn" class="btn btn-danger">Clear Scene</button>
+                    <button id="requestRenderBtn" class="btn">Refresh Render</button>
+                </section>
+
+                <!-- Stats -->
+                <section class="control-section">
+                    <h3>Statistics</h3>
+                    <div id="stats">
+                        <p>Gaussians: <span id="stat-gaussians">0</span></p>
+                        <p>Strokes: <span id="stat-strokes">0</span></p>
+                        <p>FPS: <span id="stat-fps">0</span></p>
+                    </div>
+                </section>
+
+                <!-- Instructions -->
+                <section class="control-section">
+                    <h3>Instructions</h3>
+                    <ul class="instructions">
+                        <li>Click and drag on canvas to paint</li>
+                        <li>Adjust brush settings in real-time</li>
+                        <li>Create different brush patterns</li>
+                        <li>Clear scene to start over</li>
+                    </ul>
+                </section>
+
+                <!-- Debugging Info -->
+                <section class="control-section debug-section">
+                    <h3>Debug Info</h3>
+                    <p><strong>Troubleshooting:</strong></p>
+                    <ul class="instructions">
+                        <li>Open browser console (F12) for detailed logs</li>
+                        <li>Check connection status above</li>
+                        <li>Ensure server is running on port 8000</li>
+                        <li>Look for [Canvas], [WebSocket], [App] logs</li>
+                    </ul>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/websocket_client.js"></script>
+    <script src="/static/js/canvas.js"></script>
+    <script src="/static/js/brush_preview.js"></script>
+    <script src="/static/js/brush_upload.js"></script>
+    <script src="/static/js/ui.js"></script>
+</body>
+</html>
